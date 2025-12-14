@@ -1,0 +1,5 @@
+{
+  "name": "test",
+  "description": "Ứng dụng ghép ảnh du lịch sử dụng AI. Tải ảnh của bạn lên và chọn địa điểm nổi tiếng để tạo ra những bức ảnh check-in sống động như thật.",
+  "requestFramePermissions": []
+}
