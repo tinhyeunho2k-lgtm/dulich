@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
-import { Destination, Country, ModelMode } from '../types';
+import { Destination, Country, ModelMode, UploadMode } from '../types';
 import { COUNTRIES } from '../constants';
 
 interface DestinationSelectorProps {
   onSelect: (destination: Destination) => void;
   onBack: () => void;
   userImage: string;
+  partnerImage: string | null;
   modelMode: ModelMode;
+  uploadMode: UploadMode;
 }
 
 const DestinationSelector: React.FC<DestinationSelectorProps> = ({ 
   onSelect, 
   onBack, 
   userImage,
-  modelMode
+  partnerImage,
+  modelMode,
+  uploadMode
 }) => {
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
 
@@ -35,7 +39,9 @@ const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           <p className="text-gray-400">
             {selectedCountry 
               ? `Chọn một địa điểm nổi tiếng tại ${selectedCountry.name} để check-in.` 
-              : 'Bạn muốn du lịch đến đất nước nào hôm nay?'}
+              : uploadMode === 'couple' 
+                 ? 'Hai bạn muốn đi hưởng tuần trăng mật ở đâu?' 
+                 : 'Bạn muốn du lịch đến đất nước nào hôm nay?'}
           </p>
         </div>
         
@@ -129,8 +135,12 @@ const DestinationSelector: React.FC<DestinationSelectorProps> = ({
                 </p>
               </div>
               <div className="px-5 pb-5 pt-0">
-                  <span className="inline-block w-full text-center bg-gray-700 text-gray-300 py-2 rounded-lg text-sm font-medium group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                      {modelMode === 'quality' ? 'Ghép ảnh chất lượng cao' : 'Ghép ảnh ngay'}
+                  <span className={`inline-block w-full text-center py-2 rounded-lg text-sm font-medium transition-colors ${
+                      uploadMode === 'couple' 
+                      ? 'bg-pink-900/50 text-pink-200 group-hover:bg-pink-600 group-hover:text-white'
+                      : 'bg-gray-700 text-gray-300 group-hover:bg-indigo-600 group-hover:text-white'
+                  }`}>
+                      {uploadMode === 'couple' ? '💕 Ghép đôi tại đây' : 'Ghép ảnh ngay'}
                   </span>
               </div>
             </div>
@@ -138,11 +148,25 @@ const DestinationSelector: React.FC<DestinationSelectorProps> = ({
         </div>
       )}
       
-      {/* Preview of user image */}
+      {/* Preview of user images */}
       <div className="mt-12 border-t border-gray-800 pt-8">
-        <h3 className="text-sm font-medium text-gray-500 mb-4 uppercase tracking-wider">Ảnh gốc của bạn</h3>
-        <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-700 shadow-sm">
-            <img src={userImage} alt="Original" className="w-full h-full object-cover" />
+        <h3 className="text-sm font-medium text-gray-500 mb-4 uppercase tracking-wider">
+            {uploadMode === 'couple' ? 'Ảnh gốc của hai bạn' : 'Ảnh gốc của bạn'}
+        </h3>
+        <div className="flex gap-4">
+            <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-700 shadow-sm relative group">
+                <img src={userImage} alt="User 1" className="w-full h-full object-cover" />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[10px] text-white text-center py-0.5">Bạn</div>
+            </div>
+            {partnerImage && (
+                <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-700 shadow-sm relative group">
+                    <img src={partnerImage} alt="User 2" className="w-full h-full object-cover" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[10px] text-white text-center py-0.5">Người thương</div>
+                    <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 bg-white rounded-full p-1 shadow-md z-10">
+                        <svg className="w-4 h-4 text-pink-500" fill="currentColor" viewBox="0 0 20 20"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" /></svg>
+                    </div>
+                </div>
+            )}
         </div>
       </div>
     </div>

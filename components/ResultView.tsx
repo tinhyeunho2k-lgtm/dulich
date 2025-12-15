@@ -1,21 +1,26 @@
 import React, { useState, MouseEvent } from 'react';
+import { UploadMode } from '../types';
 
 interface ResultViewProps {
   resultImage: string;
   originalImage: string;
+  partnerImage: string | null;
   destinationName: string;
   onRegenerate: () => void;
   onSelectNewDestination: () => void;
   onUploadNewImage: () => void;
+  uploadMode: UploadMode;
 }
 
 const ResultView: React.FC<ResultViewProps> = ({ 
     resultImage, 
     originalImage, 
+    partnerImage,
     destinationName, 
     onRegenerate, 
     onSelectNewDestination, 
-    onUploadNewImage 
+    onUploadNewImage,
+    uploadMode
 }) => {
   const [zoomState, setZoomState] = useState({ x: 0, y: 0, show: false });
 
@@ -43,9 +48,14 @@ const ResultView: React.FC<ResultViewProps> = ({
   return (
     <div className="w-full max-w-7xl mx-auto animate-fade-in p-2 sm:p-4">
       <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Tuyệt vời! 🎉</h2>
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            {uploadMode === 'couple' ? 'Lãng mạn quá! 💕' : 'Tuyệt vời! 🎉'}
+        </h2>
         <p className="text-lg text-gray-400 mt-2">
-            Bạn đã "có mặt" tại <span className="font-semibold text-indigo-400">{destinationName}</span>.
+            {uploadMode === 'couple' 
+             ? <span>Hai bạn trông thật hạnh phúc tại <span className="font-semibold text-pink-400">{destinationName}</span>.</span>
+             : <span>Bạn đã "có mặt" tại <span className="font-semibold text-indigo-400">{destinationName}</span>.</span>
+            }
         </p>
       </div>
 
@@ -80,7 +90,9 @@ const ResultView: React.FC<ResultViewProps> = ({
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button 
                         onClick={handleDownload}
-                        className="bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                        className={`text-white px-6 py-4 rounded-xl font-bold text-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 transform hover:-translate-y-0.5 ${
+                            uploadMode === 'couple' ? 'bg-pink-600 hover:bg-pink-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                        }`}
                     >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -95,7 +107,7 @@ const ResultView: React.FC<ResultViewProps> = ({
                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        Tạo lại (Thử lại)
+                        Thử kiểu dáng khác
                     </button>
                  </div>
 
@@ -130,8 +142,18 @@ const ResultView: React.FC<ResultViewProps> = ({
                         </svg>
                         Ảnh gốc
                     </h3>
-                    <div className="rounded-xl overflow-hidden border-2 border-gray-600 shadow-md aspect-square bg-gray-800 relative group">
-                        <img src={originalImage} alt="Original" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="grid grid-cols-1 gap-4">
+                         <div className="rounded-xl overflow-hidden border-2 border-gray-600 shadow-md aspect-square bg-gray-800 relative group">
+                            <img src={originalImage} alt="User 1" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        </div>
+                        {partnerImage && (
+                            <div className="rounded-xl overflow-hidden border-2 border-gray-600 shadow-md aspect-square bg-gray-800 relative group">
+                                <img src={partnerImage} alt="User 2" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <div className="absolute top-2 right-2 bg-pink-500/80 p-1 rounded-full">
+                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" /></svg>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
                 
@@ -143,7 +165,9 @@ const ResultView: React.FC<ResultViewProps> = ({
                         Mẹo nhỏ
                     </h4>
                     <p className="text-sm leading-relaxed opacity-90 text-blue-100">
-                        Nếu kết quả chưa ưng ý, hãy thử nhấn nút <strong>Tạo lại</strong> để AI thử một biến thể khác. Hoặc chọn địa điểm khác phù hợp hơn với góc mặt của bạn.
+                        {uploadMode === 'couple' 
+                        ? 'Nếu chưa thấy lãng mạn, hãy nhấn "Thử kiểu dáng khác" để AI tạo ra các tư thế ôm, nắm tay hoặc nhìn nhau tình tứ hơn.'
+                        : 'Nếu kết quả chưa ưng ý, hãy thử nhấn nút "Thử kiểu dáng khác" để AI thử một biến thể khác.'}
                     </p>
                 </div>
             </div>

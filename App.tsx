@@ -4,19 +4,23 @@ import UploadSection from './components/UploadSection';
 import DestinationSelector from './components/DestinationSelector';
 import ProcessingView from './components/ProcessingView';
 import ResultView from './components/ResultView';
-import { AppStep, Destination, ModelMode } from './types';
+import { AppStep, Destination, ModelMode, UploadMode } from './types';
 import { generateTravelPhoto } from './services/geminiService';
 
 const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<AppStep>(AppStep.UPLOAD);
   const [userImage, setUserImage] = useState<string | null>(null);
+  const [partnerImage, setPartnerImage] = useState<string | null>(null); // State cho ảnh thứ 2
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [modelMode, setModelMode] = useState<ModelMode>('quality');
+  const [uploadMode, setUploadMode] = useState<UploadMode>('solo');
 
-  const handleImageSelected = useCallback((base64: string) => {
-    setUserImage(base64);
+  const handleImagesSelected = useCallback((image1: string, image2: string | null, mode: UploadMode) => {
+    setUserImage(image1);
+    setPartnerImage(image2);
+    setUploadMode(mode);
     setCurrentStep(AppStep.SELECT_DESTINATION);
     setError(null);
   }, []);
@@ -29,15 +33,19 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      // Call Gemini API with the full destination object AND the selected model mode
-      const generatedImageBase64 = await generateTravelPhoto(userImage, destination, modelMode);
+      // Truyền cả ảnh thứ 2 (nếu có) vào service
+      const generatedImageBase64 = await generateTravelPhoto(
+        userImage, 
+        destination, 
+        modelMode, 
+        partnerImage // Pass optional partner image
+      );
       setResultImage(generatedImageBase64);
       setCurrentStep(AppStep.RESULT);
     } catch (err: any) {
       console.error("Error generating image:", err);
       let errorMessage = "Rất tiếc, đã xảy ra lỗi khi tạo ảnh.";
       
-      // Gợi ý chuyển model nếu lỗi 4xx
       if (err.message && (err.message.includes('400') || err.message.includes('403') || err.message.includes('404'))) {
          if (modelMode === 'quality') {
              errorMessage += " Có vẻ Model Pro không khả dụng với Key của bạn. Hãy thử chuyển sang chế độ 'Tiêu chuẩn'.";
@@ -47,18 +55,19 @@ const App: React.FC = () => {
       setError(errorMessage);
       setCurrentStep(AppStep.SELECT_DESTINATION);
     }
-  }, [userImage, modelMode]);
+  }, [userImage, partnerImage, modelMode]);
 
-  // Logic 1: Tải ảnh mới hoàn toàn (Reset All)
+  // Logic: Reset toàn bộ
   const handleStartOver = useCallback(() => {
     setUserImage(null);
+    setPartnerImage(null);
     setSelectedDestination(null);
     setResultImage(null);
     setCurrentStep(AppStep.UPLOAD);
     setError(null);
   }, []);
 
-  // Logic 2: Giữ ảnh gốc, chọn địa điểm khác
+  // Logic: Giữ ảnh gốc, chọn địa điểm khác
   const handleSelectNewDestination = useCallback(() => {
     setResultImage(null);
     setSelectedDestination(null);
@@ -66,16 +75,16 @@ const App: React.FC = () => {
     setError(null);
   }, []);
 
-  // Logic 3: Tạo lại với cùng địa điểm và ảnh gốc
+  // Logic: Tạo lại
   const handleRegenerate = useCallback(() => {
     if (selectedDestination && userImage) {
         handleDestinationSelected(selectedDestination);
     }
-  }, [selectedDestination, userImage, handleDestinationSelected]);
+  }, [selectedDestination, userImage, partnerImage, handleDestinationSelected]);
 
-  // Nút Back ở màn hình chọn địa điểm
   const handleBackToUpload = useCallback(() => {
      setUserImage(null);
+     setPartnerImage(null);
      setCurrentStep(AppStep.UPLOAD);
   }, []);
 
@@ -85,7 +94,6 @@ const App: React.FC = () => {
 
       <main className="flex-grow flex flex-col items-center justify-start pt-12 pb-20 px-4 sm:px-6">
         
-        {/* Error Notification */}
         {error && (
             <div className="w-full max-w-2xl mb-6 bg-red-900/50 border-l-4 border-red-500 p-4 rounded-r-md shadow-sm">
                 <div className="flex">
@@ -103,7 +111,7 @@ const App: React.FC = () => {
 
         {currentStep === AppStep.UPLOAD && (
           <UploadSection 
-            onImageSelected={handleImageSelected} 
+            onImagesSelected={handleImagesSelected} 
             modelMode={modelMode}
             onModelChange={setModelMode}
           />
@@ -114,7 +122,9 @@ const App: React.FC = () => {
             onSelect={handleDestinationSelected}
             onBack={handleBackToUpload}
             userImage={userImage}
+            partnerImage={partnerImage}
             modelMode={modelMode}
+            uploadMode={uploadMode}
           />
         )}
 
@@ -126,10 +136,12 @@ const App: React.FC = () => {
           <ResultView 
             resultImage={resultImage}
             originalImage={userImage}
+            partnerImage={partnerImage}
             destinationName={selectedDestination.name}
             onRegenerate={handleRegenerate}
             onSelectNewDestination={handleSelectNewDestination}
             onUploadNewImage={handleStartOver}
+            uploadMode={uploadMode}
           />
         )}
       </main>

@@ -3,7 +3,7 @@ export interface Destination {
   name: string;
   description: string;
   imageUrl: string; // Placeholder or thumbnail
-  promptContext: string; // Specific context for the AI
+  promptContext: string | string[]; // Cập nhật: Có thể là 1 chuỗi hoặc danh sách nhiều kịch bản
   isBeach?: boolean; // Nếu true, AI sẽ tự động thay trang phục thành đồ biển
 }
 
@@ -28,3 +28,4 @@ export interface GeneratedImage {
 }
 
 export type ModelMode = 'quality' | 'fast';
+export type UploadMode = 'solo' | 'couple';
