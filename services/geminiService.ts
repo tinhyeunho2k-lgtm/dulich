@@ -4,7 +4,13 @@ import { Destination, ModelMode } from "../types";
 const getClient = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    throw new Error("API Key is missing. Please set process.env.API_KEY.""API Key is missing. Please set process.env.GEMINI_API_KEY.""API Key is missing. Please set p  base64Image: string, 
+    throw new Error("API Key is missing. Please set process.env.API_KEY.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
+
+export const generateTravelPhoto = async (
+  base64Image: string, 
   destination: Destination,
   modelMode: ModelMode = 'quality'
 ): Promise<string> => {
